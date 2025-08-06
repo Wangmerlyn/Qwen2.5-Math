@@ -66,6 +66,7 @@ def parse_args():
 
 def prepare_data(data_name, args):
     examples = load_data(data_name, args.split, args.data_dir)
+    print(f"Loaded {len(examples)} examples from {data_name} {args.split}")
 
     # sample `num_test_sample` from dataset
     if args.num_test_sample > 0:
@@ -122,6 +123,7 @@ def setup(args):
             model=args.model_name_or_path,
             tensor_parallel_size=len(available_gpus) // args.pipeline_parallel_size,
             pipeline_parallel_size=args.pipeline_parallel_size,
+            max_num_seqs=32,
             trust_remote_code=True,
         )
         tokenizer = None
@@ -293,7 +295,7 @@ def main(llm, tokenizer, data_name, args):
                 tokenizer=tokenizer,
                 prompts=prompts,
                 max_new_tokens=args.max_tokens_per_call,
-                batch_size=16,
+                batch_size=500,
                 stop_id_sequences=stop_words,
             )
 

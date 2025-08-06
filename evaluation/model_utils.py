@@ -225,7 +225,7 @@ def _test_generate_completions():
             tokenizer=tokenizer,
             prompts=prompts,
             max_new_tokens=128,
-            batch_size=16,
+            batch_size=500,
             # stop_id_sequences=stop_id_sequences,
             stop_id_sequences=stop_sequences,
     )
