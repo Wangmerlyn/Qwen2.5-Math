@@ -2,6 +2,11 @@ import random
 import os
 import argparse
 import time
+import json
+import re
+import smtplib
+from email.message import EmailMessage
+from typing import Optional
 from vllm import LLM, SamplingParams
 from datetime import datetime
 from tqdm import tqdm
@@ -391,12 +396,54 @@ def main(llm, tokenizer, data_name, args):
     result_json["time_use_in_minite"] = (
         f"{int(time_use // 60)}:{int(time_use % 60):02d}"
     )
+    # format email body
+    email_title = f"[{data_name}] {os.path.basename(args.model_name_or_path)}"
+    email_body = f"[{data_name}] {os.path.basename(args.model_name_or_path)}\n" + f"Acc: {result_json['acc']*100:.2f}% ({len(all_samples)} samples)\n"
+    email_body += f"Time use: {result_json['time_use_in_minite']}\n"
+    email_body += f"Prompt type: {args.prompt_type}\n"
+    email_body += f"Temperature: {args.temperature}, Top-p: {args.top_p}, n_sampling: {args.n_sampling}\n"
+    email_body += f"Output file: {out_file}\n"
+    send_mail(subject=email_title, body=email_body)
 
     with open(
         out_file.replace(".jsonl", f"_{args.prompt_type}_metrics.json"), "w"
     ) as f:
         json.dump(result_json, f, indent=4)
     return result_json
+
+def send_mail(subject: str, body: str, to_csv: Optional[str] = None):
+    host = os.getenv("SMTP_HOST", "smtp.gmail.com")  # Gmail
+    port = int(os.getenv("SMTP_PORT", "465"))  # 465=SSL, 587=STARTTLS
+    user = os.getenv("SMTP_USER", "sywang0227@gmail.com")
+    password = os.getenv("SMTP_PASS")
+    if not user or not password:
+        print("SMTP_USER or SMTP_PASS not set, skipping email sending.")
+        return
+    sender = os.getenv("SMTP_FROM", user)
+    tos = [
+        x.strip()
+        for x in (to_csv or os.getenv("MAIL_TO", "wsy0227@sjtu.edu.cn")).split(",")
+        if x.strip()
+    ]
+
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = sender
+    msg["To"] = ", ".join(tos)
+    msg.set_content(body)
+
+    if port == 465:
+        with smtplib.SMTP_SSL(host, port) as s:
+            if user and password:
+                s.login(user, password)
+            s.send_message(msg)
+    else:
+        with smtplib.SMTP(host, port) as s:
+            s.starttls()
+            if user and password:
+                s.login(user, password)
+            s.send_message(msg)
+
 
 
 if __name__ == "__main__":
