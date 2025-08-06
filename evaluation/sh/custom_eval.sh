@@ -46,3 +46,5 @@ python3 -u math_eval.py \
     --use_vllm \
     --save_outputs \
     --overwrite
+
+bash sh/upload_results.sh
