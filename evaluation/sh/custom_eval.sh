@@ -1,4 +1,4 @@
-set -ex
+set -x
 
 PROMPT_TYPE=${1:-qwen25-math-cot}
 MODEL_NAME_OR_PATH=${2:-Qwen/Qwen2.5-7B-Math-Instruct}
