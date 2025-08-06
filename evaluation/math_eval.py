@@ -44,6 +44,7 @@ def parse_args():
     parser.add_argument("--save_outputs", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--use_safetensors", action="store_true")
+    parser.add_argument("--timestamp", action="store_true")
     parser.add_argument("--num_shots", type=int, default=0)
     parser.add_argument(
         "--apply_chat_template",
@@ -86,7 +87,10 @@ def prepare_data(data_name, args):
     output_dir = args.output_dir
     if not os.path.exists(output_dir):
         output_dir = f"outputs/{output_dir}"
-    out_file = f"{output_dir}/{data_name}/{out_file_prefix}_s{args.start}_e{args.end}.jsonl"
+    if args.timestamp:
+        out_file = f"{output_dir}/{data_name}/{out_file_prefix}_{model_name.replace('/', '_')}_s{args.start}_e{args.end}_{dt_string}.jsonl"
+    else:
+        out_file = f"{output_dir}/{data_name}/{out_file_prefix}_s{args.start}_e{args.end}.jsonl"
     os.makedirs(f"{output_dir}/{data_name}", exist_ok=True)
 
     # load all processed samples
